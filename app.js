@@ -1,70 +1,102 @@
+import express from 'express'; // นำเข้า express ซึ่งเป็น framework สำหรับสร้าง server
+import pg from 'pg'; // นำเข้า pg ซึ่งเป็น PostgreSQL client สำหรับ Node.js
+import bodyParser from 'body-parser'; // นำเข้า body-parser เพื่อช่วยในการแยกข้อมูลที่ส่งจากฟอร์ม
+import path from 'path'; // นำเข้า path เพื่อจัดการกับเส้นทางไฟล์
+import { fileURLToPath } from 'url'; // นำเข้า fileURLToPath เพื่อแปลง URL เป็น path
 
+const app = express(); // สร้าง instance ของ express
+const port = 3000; // กำหนด port ที่ server จะทำงาน
 
+const { Pool } = pg; // สร้าง Pool จาก pg เพื่อจัดการการเชื่อมต่อกับฐานข้อมูล
 
-import express from 'express'; // นำเข้าโมดูล express
-import bodyParser from 'body-parser'; // นำเข้าโมดูล body-parser
-import pkg from 'pg'; // นำเข้า pg (PostgreSQL client)
+// แปลง import.meta.url ให้ได้ __dirname
+const __filename = fileURLToPath(import.meta.url); // แปลง URL ของไฟล์ปัจจุบันให้เป็น path
+const __dirname = path.dirname(__filename); // หาชื่อ directory ของไฟล์ปัจจุบัน
 
-const { Pool } = pkg; // สร้าง Pool จาก pg
-const app = express(); // สร้างแอปพลิเคชัน Express
-const port = 5001; // กำหนดพอร์ตที่จะใช้
+// Middleware เพื่อแยกข้อมูลฟอร์ม
+app.use(bodyParser.urlencoded({ extended: true })); // ใช้ body-parser เพื่อแยกข้อมูลฟอร์มที่ถูกส่ง
 
-// เชื่อมต่อกับฐานข้อมูล PostgreSQL
+// กำหนดให้ใช้ EJS เป็น templating engine
+app.set('view engine', 'ejs'); // กำหนดให้ใช้ EJS เป็น templating engine
+app.set('views', path.join(__dirname, 'views')); // กำหนดเส้นทางสำหรับโฟลเดอร์ views
+
+// สร้าง connection pool สำหรับ PostgreSQL
 const pool = new Pool({
-    user: 'postgres',    // แทนที่ด้วยชื่อผู้ใช้ของ PostgreSQL ของคุณ
-    host: 'localhost',    // ที่อยู่เซิร์ฟเวอร์ฐานข้อมูล
-    database: 'attendance_db', // ชื่อฐานข้อมูล
-    password: '0994150630',   // แทนที่ด้วยรหัสผ่านของคุณ
-    port: 5432            // พอร์ตที่ใช้สำหรับ PostgreSQL
+    host: 'localhost', // กำหนด host ของฐานข้อมูล
+    port: 5432, // กำหนด port ของฐานข้อมูล
+    user: 'postgres', // กำหนด username สำหรับการเชื่อมต่อ
+    password: '0994150630', // กำหนด password สำหรับการเชื่อมต่อ
+    database: 'my_cream', // กำหนดชื่อฐานข้อมูล
 });
 
-// ตั้งค่า view engine เป็น EJS
-app.set('view engine', 'ejs'); // ใช้ EJS เป็น template engine
-app.set('views', './views');    // กำหนดตำแหน่งที่ตั้งของไฟล์ view
-
-// ตั้งค่า middleware เพื่อจัดการข้อมูลที่ส่งมาในรูปแบบ URL encoded
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// เส้นทางแสดงหน้าเช็คชื่อ (หน้าแรก)
-app.get('/', async (req, res) => {
-    const result = await pool.query('SELECT * FROM attendance'); // คิวรีข้อมูลจากตาราง attendance
-    res.render('index', { students: result.rows }); // เรนเดอร์หน้า index พร้อมข้อมูลนักเรียน
+// เสิร์ฟฟอร์ม (index.ejs)
+app.get('/', async (req, res) => { // สร้าง route สำหรับหน้าแรก
+    try {
+        const result = await pool.query('SELECT * FROM student'); // ดึงข้อมูลจากตาราง student
+        const students = result.rows; // เก็บข้อมูลในตัวแปร students
+        res.render('index', { students }); // Render หน้า index.ejs พร้อมส่งข้อมูล students
+    } catch (err) {
+        console.error('Error fetching students:', err); // แสดงข้อความผิดพลาดใน console
+        res.status(500).send('Error fetching students'); // ส่งสถานะ 500 ถ้ามีข้อผิดพลาด
+    }
 });
 
-// เส้นทางแสดงหน้าเลือกนักเรียนเพื่อตรวจสอบชื่อ
-app.get('/checkin', async (req, res) => {
-    res.render('checkin'); // เรนเดอร์หน้า checkin
+// Route เพื่อแสดงข้อมูลการ check-in
+app.get('/checkin', async (req, res) => { // สร้าง route สำหรับหน้า check-in
+    try {
+        // คำสั่ง SQL เพื่อดึงข้อมูลการ check-in
+        const result = await pool.query(` 
+            SELECT 
+                sl.id, 
+                sl.active_date, 
+                sl.status,
+                s.first_name, 
+                s.last_name 
+            FROM student_list sl
+            JOIN student s ON sl.student_id = s.id
+        `);
+        const studentLists = result.rows; // เก็บข้อมูลการ check-in ในตัวแปร studentLists
+        res.render('checkin', { studentLists }); // Render หน้า checkin.ejs พร้อมส่งข้อมูล studentLists
+    } catch (err) {
+        console.error('Error fetching check-in data:', err); // แสดงข้อความผิดพลาดใน console
+        res.status(500).send('Error fetching check-in data'); // ส่งสถานะ 500 ถ้ามีข้อผิดพลาด
+    }
 });
 
-// เส้นทางบันทึกสถานะการเช็คชื่อ
-app.post('/checkin', async (req, res) => {
-    const { student_id, student_name, status } = req.body; // ดึงข้อมูลจากฟอร์ม
-    const date = new Date(); // สร้างตัวแปรวันที่
+// Route เพื่อบันทึกการเข้าชั้นเรียน
+app.post('/save-attendance', async (req, res) => { // สร้าง route สำหรับบันทึกการเข้าชั้นเรียน
+    const attendanceData = req.body; // รับข้อมูลจากฟอร์ม
 
-    // คิวรีเพื่อบันทึกข้อมูลการเช็คชื่อ
-    await pool.query(
-        'INSERT INTO attendance (student_id, student_name, status, date) VALUES ($1, $2, $3, $4)',
-        [student_id, student_name, status, date] // ใช้ข้อมูลจากฟอร์ม
-    );
+    const sectionId = 1; // กำหนด section_id ที่ต้องการบันทึก
+    const activeDate = new Date(); // วันที่บันทึกข้อมูลเป็นวันที่ปัจจุบัน
 
-    res.redirect('/'); // เปลี่ยนเส้นทางไปยังหน้าแรกหลังบันทึกข้อมูลเสร็จ
+    try {
+        const queries = []; // สร้าง array สำหรับเก็บคำสั่ง SQL
+
+        // ตรวจสอบนักเรียนแต่ละคน
+        for (const key in attendanceData) { // วนลูปเพื่อเช็คข้อมูล attendance
+            if (key.startsWith('attendance_')) { // ตรวจสอบว่าชื่อ key เริ่มต้นด้วย 'attendance_'
+                const studentId = key.split('_')[1]; // แยก student ID
+                const status = attendanceData[key]; // ได้สถานะที่ส่งมา (Y หรือ N)
+
+                // สร้างคำสั่ง SQL สำหรับบันทึกข้อมูลการเข้าชั้นเรียน
+                queries.push(pool.query(`
+                    INSERT INTO student_list (section_id, student_id, active_date, status)
+                    VALUES ($1, $2, $3, $4)
+                `, [sectionId, studentId, activeDate, status])); // ใส่ค่าลงในคำสั่ง SQL
+            }
+        }
+
+        await Promise.all(queries); // รอให้คำสั่ง SQL ทั้งหมดทำงานเสร็จ
+
+        res.send('Attendance saved successfully!'); // ส่งข้อความยืนยันการบันทึก
+    } catch (error) {
+        console.error('Error saving attendance:', error); // แสดงข้อความผิดพลาดใน console
+        res.status(500).send('Error saving attendance.'); // ส่งสถานะ 500 ถ้ามีข้อผิดพลาด
+    }
 });
 
-// เส้นทางสำหรับลบข้อมูล
-app.post('/delete', async (req, res) => {
-    const { student_id } = req.body; // ดึง student_id จากฟอร์ม
-
-    // คิวรีเพื่อลบข้อมูลจากตาราง attendance
-    await pool.query(
-        'DELETE FROM attendance WHERE student_id = $1',
-        [student_id] // ใช้ student_id ที่ระบุ
-    );
-
-    res.redirect('/'); // เปลี่ยนเส้นทางไปยังหน้าแรกหลังลบข้อมูลเสร็จ
-});
-
-// เริ่มเซิร์ฟเวอร์
-const PORT = 5001; // หรือเลขพอร์ตอื่นๆ ที่คุณต้องการ
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`); // แสดงข้อความเมื่อเซิร์ฟเวอร์เริ่มทำงาน
+// เริ่มต้น server
+app.listen(port, () => { // เริ่มต้น server
+    console.log(`Server is running on http://localhost:${port}`); // แสดงข้อความใน console ว่า server เริ่มทำงานที่ port ที่กำหนด
 });

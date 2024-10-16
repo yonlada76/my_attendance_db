@@ -1,91 +1,81 @@
 <!DOCTYPE html>
-<html lang="en"> <!-- กำหนดภาษาของเอกสารเป็นภาษาอังกฤษ -->
+<html lang="en">
 <head>
-    <meta charset="UTF-8"> <!-- กำหนดการเข้ารหัสตัวอักษรสำหรับเอกสาร -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- รับรองการออกแบบที่ตอบสนองต่ออุปกรณ์มือถือ -->
-    <title>เช็คชื่อ</title> <!-- กำหนดชื่อของหน้าเว็บซึ่งจะแสดงในแท็บของเบราว์เซอร์ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in List</title>
     <style>
         body {
-            font-family: Arial, sans-serif; /* กำหนดฟอนต์สำหรับเอกสาร */
-            background-color: #f4f4f4; /* กำหนดสีพื้นหลังให้เป็นสีเทาอ่อน */
-            margin: 0; /* ลบค่า margin เริ่มต้น */
-            padding: 20px; /* เพิ่ม padding รอบ ๆ เนื้อหา */
-            display: flex; /* ใช้ Flexbox สำหรับการจัดเรียง */
-            justify-content: center; /* จัดเรียงเนื้อหาให้กลางแนวนอน */
-            align-items: center; /* จัดเรียงเนื้อหาให้กลางแนวตั้ง */
-            height: 100vh; /* กำหนดความสูงให้เท่ากับ 100% ของความสูงของหน้าจอ */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* ฟอนต์ที่ใช้ในหน้าเว็บ */
+            background-color: #f0f8ff; /* สีพื้นหลังที่นุ่มนวล */
+            margin: 0; /* ไม่มีระยะห่างรอบนอก */
+            padding: 20px; /* ระยะห่างภายใน */
+            color: #333; /* สีของตัวอักษร */
         }
-
         h1 {
-            color: #333; /* กำหนดสีให้กับหัวข้อเป็นสีเทาเข้ม */
-            text-align: center; /* จัดกลางข้อความในหัวข้อ */
+            text-align: center; /* จัดกลางข้อความ */
+            color: #0056b3; /* สีฟ้าสำหรับหัวข้อ */
+            margin-bottom: 20px; /* ระยะห่างด้านล่าง */
+            font-size: 2.5em; /* ขนาดตัวอักษรที่ใหญ่ขึ้น */
         }
-
-        form {
-            background-color: #fff; /* กำหนดพื้นหลังของฟอร์มให้เป็นสีขาว */
-            border-radius: 8px; /* ทำให้มุมของฟอร์มมน */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงาให้กับฟอร์ม */
-            padding: 20px; /* เพิ่ม padding ภายในฟอร์ม */
-            max-width: 400px; /* กำหนดความกว้างสูงสุดของฟอร์ม */
-            width: 100%; /* อนุญาตให้ฟอร์มใช้ความกว้างเต็มที่ถึงความกว้างสูงสุด */
+        table {
+            width: 100%; /* ขยายตารางให้เต็มความกว้าง */
+            border-collapse: collapse; /* รวมเส้นขอบของเซลล์ */
+            margin: 20px 0; /* ระยะห่างด้านบนและล่าง */
+            background-color: #fff; /* สีพื้นหลังของตาราง */
+            border-radius: 8px; /* มุมที่โค้งมน */
+            overflow: hidden; /* ป้องกันการแสดงผลที่ไม่สวยงาม */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* เงาให้ดูมีมิติ */
         }
-
-        label {
-            display: block; /* ทำให้ label เป็นบล็อกเพื่อการจัดแนวที่ดีขึ้น */
-            margin-bottom: 10px; /* เพิ่มระยะห่างด้านล่างของแต่ละ label */
-            font-weight: bold; /* ทำให้ข้อความใน label เป็นตัวหนา */
-            color: #555; /* กำหนดสีให้กับ label เป็นสีเทากลาง */
+        th, td {
+            padding: 15px; /* ระยะห่างภายในเซลล์ */
+            text-align: left; /* จัดข้อความไปทางซ้าย */
+            border-bottom: 1px solid #ddd; /* เส้นขอบด้านล่าง */
+            transition: background-color 0.3s; /* เอฟเฟกต์เมื่อเปลี่ยนสีพื้นหลัง */
         }
-
-        input[type="text"],
-        select {
-            width: 100%; /* ทำให้ช่องกรอกข้อมูลและกล่องเลือกมีความกว้างเต็มที่ */
-            padding: 10px; /* เพิ่ม padding ภายในช่องกรอกข้อมูล */
-            margin-bottom: 20px; /* เพิ่มระยะห่างด้านล่างของแต่ละช่องกรอกข้อมูล */
-            border: 1px solid #ccc; /* กำหนดขอบสีเทาอ่อนรอบ ๆ ช่องกรอกข้อมูล */
-            border-radius: 4px; /* ทำให้มุมของช่องกรอกข้อมูลมน */
-            font-size: 16px; /* กำหนดขนาดฟอนต์สำหรับช่องกรอกข้อมูล */
+        th {
+            background-color: #007bff; /* สีฟ้าสำหรับหัวตาราง */
+            color: white; /* สีตัวอักษรในหัวตาราง */
+            font-size: 1.2em; /* ขนาดตัวอักษรที่ใหญ่ขึ้นสำหรับหัวตาราง */
         }
-
-        button {
-            width: 100%; /* ทำให้ปุ่มมีความกว้างเต็มที่ */
-            padding: 10px; /* เพิ่ม padding ภายในปุ่ม */
-            background-color: #28a745; /* กำหนดสีพื้นหลังของปุ่มให้เป็นสีเขียว */
-            color: white; /* กำหนดสีข้อความในปุ่มเป็นสีขาว */
-            border: none; /* ลบขอบเริ่มต้นของปุ่ม */
-            border-radius: 4px; /* ทำให้มุมของปุ่มมน */
-            font-size: 16px; /* กำหนดขนาดฟอนต์สำหรับข้อความในปุ่ม */
-            cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็นรูปมือเมื่อชี้ไปที่ปุ่ม */
-            transition: background-color 0.3s; /* ทำให้การเปลี่ยนสีพื้นหลังของปุ่มมีความนุ่มนวล */
+        tr:hover {
+            background-color: #f1f1f1; /* สีพื้นหลังที่เปลี่ยนเมื่อเมาส์อยู่เหนือแถว */
         }
-
-        button:hover {
-            background-color: #218838; /* เปลี่ยนสีพื้นหลังของปุ่มให้เข้มขึ้นเมื่อชี้ไปที่ปุ่ม */
+        .status-present {
+            color: green; /* สีเขียวสำหรับสถานะ "มา" */
+            font-weight: bold; /* ทำให้ข้อความหนาขึ้น */
         }
-
-        @media (max-width: 500px) {
-            form {
-                padding: 15px; /* ลด padding ในฟอร์มสำหรับหน้าจอขนาดเล็กเพื่อให้พอดี */
-            }
+        .status-absent {
+            color: red; /* สีแดงสำหรับสถานะ "ไม่มา" */
+            font-weight: bold; /* ทำให้ข้อความหนาขึ้น */
         }
     </style>
 </head>
 <body>
-    <form action="/checkin" method="post"> <!-- เริ่มฟอร์มสำหรับเช็คชื่อนักเรียน -->
-        <h1>เช็คชื่อนักเรียน</h1> <!-- หัวข้อของฟอร์ม -->
-        <label for="student_id">รหัสนักเรียน:</label> <!-- Label สำหรับช่องกรอกรหัสนักเรียน -->
-        <input type="text" name="student_id" required> <!-- ช่องกรอกรหัสนักเรียนที่ต้องกรอก -->
-
-        <label for="student_name">ชื่อนักเรียน:</label> <!-- Label สำหรับช่องกรอกชื่อเด็กนักเรียน -->
-        <input type="text" name="student_name" required> <!-- ช่องกรอกชื่อเด็กนักเรียนที่ต้องกรอก -->
-
-        <label for="status">สถานะ:</label> <!-- Label สำหรับการเลือกสถานะ -->
-        <select name="status" required> <!-- กล่องเลือกสถานะที่ต้องเลือก -->
-            <option value="Present">มา</option> <!-- ตัวเลือกสถานะ "มา" -->
-            <option value="Absent">ขาด</option> <!-- ตัวเลือกสถานะ "ขาด" -->
-        </select>
-
-        <button type="submit">เช็คชื่อ</button> <!-- ปุ่มส่งฟอร์ม -->
-    </form>
+    <h1>Check-in List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Active Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% studentLists.forEach(item => { %>
+                <tr>
+                    <td><%= item.student_id %></td>
+                    <td><%= item.first_name %></td>
+                    <td><%= item.last_name %></td>
+                    <td><%= item.active_date.toISOString().split('T')[0] %></td>
+                    <td class="<%= item.status === 'Y' ? 'status-present' : 'status-absent' %>">
+                        <%= item.status === 'Y' ? 'Present' : 'Absent' %>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
 </body>
 </html>
